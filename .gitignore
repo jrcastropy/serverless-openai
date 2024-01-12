@@ -1,0 +1,8 @@
+venv/
+serverless_openai.egg-info/
+dist/
+build/
+test.py
+archives/
+*__pycache__*
+*.png
