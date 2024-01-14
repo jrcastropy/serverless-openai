@@ -69,8 +69,6 @@ def download_img(img_url):
         url=img_url, 
         headers={'User-Agent': 'Mozilla/5.0'}
     )
-    # print()
-    # req = urlopen(req)
     arr = np.asarray(bytearray(req.content), dtype=np.uint8)
     img_np = cv2.imdecode(arr, -1) # 'Load it as it is'
     cv_im = cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR)
@@ -87,13 +85,11 @@ def crop_image(img_np, dir='images'):
     img_b64_list = []
     while True:
         fn = f"{dir}/{uuid.uuid4()}.png"
-        print(curr_h, max_h)
         crop_img = img_np[curr_h:max_h, :]
         curr_h = max_h
         max_h += max_h
         if not crop_img.shape[0]:
             break
-        print(crop_img.shape)
         cv2.imwrite(fn, crop_img)
         b64_img = encode_image(fn)
         img_b64_list.append(b64_img)
