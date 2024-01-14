@@ -5,4 +5,3 @@ build/
 test.py
 archives/
 *__pycache__*
-*.png
