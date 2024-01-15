@@ -199,6 +199,60 @@ class OpenAIAPI(BaseModel):
             except Exception as e:
                 print("ERROR:", e)
         return False
+    
+    def vision_longimage(
+            self,
+            messages: VisionMessage,
+            model: Union[VisionModels, str] = VisionModels.gpt4_vision,
+            tries: int = 5,
+            timeout: int = 500,
+            temperature: Optional[float] = 1,
+            max_tokens: Optional[int] = 1024,
+        ) -> str:
+
+        if 'data:image/jpeg;base64' in messages.image:
+            image_np = b64_to_np(messages.image)
+        else:
+            image_np = urlimage_to_np(messages.image)
+        img_b64_list = crop_image(image_np)
+        newm = [
+            {
+                "role": messages.role,
+                "content": [
+                    {
+                        "type": "text",
+                        "text": messages.text
+                    },
+                ]
+            }
+        ]
+        print(type(img_b64_list), len(img_b64_list))
+        for b64 in img_b64_list:
+            newm[0]['content'].append(
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": b64,
+                        "detail": "high"
+                    }
+                }
+            )
+
+        data = {
+            "model": model,
+            "messages": newm,
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+        }
+        for _ in range(tries):
+            try:
+                res = requests.post(self.completion_url, headers=self.headers, json=data, timeout=timeout).json()
+                if 'choices' in res:
+                    message = res['choices'][0]['message']
+                    return message['content']
+            except Exception as e:
+                print("ERROR:", e)
+        return False
 
     def embeddings(
             self,

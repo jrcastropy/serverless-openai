@@ -2,7 +2,7 @@ from enum import Enum
 from pydantic import AfterValidator, BaseModel, HttpUrl, validator, TypeAdapter, ValidationError
 from typing import List, Optional, Union
 from typing_extensions import Annotated
-import base64, cv2, requests, json, uuid
+import base64, cv2, requests, json, uuid, os
 import numpy as np
 
 HttpUrlString = Annotated[HttpUrl, AfterValidator(lambda v: str(v))]
@@ -64,33 +64,67 @@ class Similarity(BaseModel):
     vector: List[List[float]]
     matrix: List[List[float]]
 
-def download_img(img_url):
+def save_npimage(
+        filename: str, 
+        img_np: np.array,
+        dir: str = "saved_images"
+    ) -> str:
+    os.makedirs(dir, exist_ok=True)
+    cv2.imwrite(f"{dir}/{filename}", img_np)
+    return f"{dir}/{filename}"
+
+def urlimage_to_np(
+        img_url: str,
+        save_image: bool=False,
+        filename: str="test.png"
+    ) -> np.array:
     req = requests.get(
         url=img_url, 
         headers={'User-Agent': 'Mozilla/5.0'}
     )
     arr = np.asarray(bytearray(req.content), dtype=np.uint8)
     img_np = cv2.imdecode(arr, -1) # 'Load it as it is'
-    cv_im = cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR)
-    return cv_im
+    # img_np = cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR)
+    if save_image:
+        saved_image = save_npimage(filename, img_np)
+    return img_np
     
-def encode_image(image_path):
+def encode_image(image_path: str) -> str:
     with open(image_path, "rb") as image_file:
         base64_image = base64.b64encode(image_file.read()).decode('utf-8')
         return f"data:image/jpeg;base64,{base64_image}"
+    
+def b64_to_np(
+        base64_image: str,
+        save_image: bool = False,
+        filename: str="test.png"
+    ) -> np.array:
+    base64_image =  base64_image.replace('data:image/jpeg;base64,', "")
+    image_data = base64.b64decode(base64_image)
 
-def crop_image(img_np, dir='images'):
+    # Convert the raw image data to a numpy array
+    np_arr = np.frombuffer(image_data, np.uint8)
+
+    # Decode the numpy array into an image
+    image_np = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+    if save_image:
+        saved_image = save_npimage(filename, image_np)
+    return image_np
+
+def crop_image(
+        img_np: np.array, 
+        max_h: int = 4086,
+    ) -> list:
     curr_h = 0
-    max_h = 4096
     img_b64_list = []
     while True:
-        fn = f"{dir}/{uuid.uuid4()}.png"
+        fn = f"{uuid.uuid4()}.png"
         crop_img = img_np[curr_h:max_h, :]
         curr_h = max_h
         max_h += max_h
         if not crop_img.shape[0]:
             break
-        cv2.imwrite(fn, crop_img)
-        b64_img = encode_image(fn)
+        saved_image = save_npimage(fn, crop_img)
+        b64_img = encode_image(saved_image)
         img_b64_list.append(b64_img)
     return img_b64_list
