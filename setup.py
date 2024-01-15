@@ -14,7 +14,7 @@ setup(
     long_description_content_type="text/markdown",
     long_description=LONG_DESCRIPTION,
     packages=find_packages(),
-    install_requires=['requests', 'opencv-python-headless', 'beautifulsoup4', 'numpy', 'pydantic'],
+    install_requires=['requests', 'opencv-python-headless', 'beautifulsoup4', 'numpy', 'pydantic', 'urllib3==2.1.0'],
     keywords=['serverless', 'openai', 'aws lambda', 'cloud functions', 'openai API'],
     classifiers=[
         "Development Status :: 2 - Developing",
