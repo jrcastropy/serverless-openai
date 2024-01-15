@@ -17,7 +17,7 @@ setup(
     install_requires=['requests', 'opencv-python-headless', 'beautifulsoup4', 'numpy', 'pydantic', 'urllib3==2.1.0'],
     keywords=['serverless', 'openai', 'aws lambda', 'cloud functions', 'openai API'],
     classifiers=[
-        "Development Status :: 2 - Developing",
+        "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
         "Programming Language :: Python :: 3.10",
         "Operating System :: Unix",
