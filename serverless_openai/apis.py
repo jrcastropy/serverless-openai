@@ -51,7 +51,7 @@ class OpenAIAPI(BaseModel):
             stop: Optional[list] = None,
             stream: Optional[bool] = False,
             top_p: Optional[int] = 1
-        ) -> str:
+        ) -> OpenAIResults:
         messages = messages.model_dump()['messages']
         
         data = {
@@ -71,15 +71,17 @@ class OpenAIAPI(BaseModel):
             "stream": stream,
             "top_p": top_p
         }
+        res = {}
         for _ in range(tries):
             try:
                 res = requests.post(self.completion_url, headers=self.headers, json=data, timeout=timeout).json()
                 if 'choices' in res:
                     message = res['choices'][0]['message']
-                    return message['content']
+                    return OpenAIResults(result=message['content'], result_json=res)
             except Exception as e:
                 print("ERROR:", e)
-        return False
+        
+        return OpenAIResults(result=False, result_json=res)
     
     def tools(
             self, 
@@ -103,7 +105,7 @@ class OpenAIAPI(BaseModel):
             stop: Optional[list] = None,
             stream: Optional[bool] = False,
             top_p: Optional[int] = 1,  
-        ) -> dict:
+        ) -> OpenAIResults:
         messages = messages.model_dump()['messages']
 
         data = {
@@ -125,18 +127,20 @@ class OpenAIAPI(BaseModel):
             "stream": stream,
             "top_p": top_p
         }
+
+        results = {}
         for _ in range(5):
             try:
                 results = requests.post(self.completion_url, headers=self.headers, json=data, timeout=timeout).json()
                 if 'choices' in results:
                     res = results['choices'][0]['message']
                     res_json = json.loads(res['tool_calls'][0]['function']['arguments'], strict=False)
-                    return res_json
+                    return OpenAIResults(result=res_json, result_json=results)
                 else:
                     print("RESULTS:", results)
             except Exception as e:
                 print("REQ POST ERROR:", e)
-        return False
+        return OpenAIResults(result=False, result_json=results)
     
     def dall_e(
             self,
@@ -144,8 +148,9 @@ class OpenAIAPI(BaseModel):
             model: Union[ImageCreationModels, str] = ImageCreationModels.dalle_3,
             n: int = 1,
             size: str = "1024x1024",
-            timeout: int = 500
-        ) -> dict:
+            timeout: int = 500,
+            tries: int = 5
+        ) -> OpenAIResults:
 
         data = {
             "model": model,
@@ -153,8 +158,12 @@ class OpenAIAPI(BaseModel):
             "n": n,
             "size": size,
         }
-        results = requests.post(self.imagecreation_url, headers=self.headers, json=data, timeout=timeout).json()
-        return results
+
+        results = {}
+        for _ in range(tries):
+            results = requests.post(self.imagecreation_url, headers=self.headers, json=data, timeout=timeout).json()
+            return OpenAIResults(result=results['url'], result_json=results)
+        return OpenAIResults(result=False, result_json=results)
     
     def vision(
             self,
@@ -164,7 +173,7 @@ class OpenAIAPI(BaseModel):
             timeout: int = 500,
             temperature: Optional[float] = 1,
             max_tokens: Optional[int] = 1024,
-        ) -> str:
+        ) -> OpenAIResults:
 
         newm = [
             {
@@ -190,15 +199,16 @@ class OpenAIAPI(BaseModel):
             "temperature": temperature,
             "max_tokens": max_tokens,
         }
+        res = {}
         for _ in range(tries):
             try:
                 res = requests.post(self.completion_url, headers=self.headers, json=data, timeout=timeout).json()
                 if 'choices' in res:
                     message = res['choices'][0]['message']
-                    return message['content']
+                    return OpenAIResults(result=message['content'], result_json=res)
             except Exception as e:
                 print("ERROR:", e)
-        return False
+        return OpenAIResults(result=False, result_json=res)
     
     def vision_longimage(
             self,
@@ -208,7 +218,7 @@ class OpenAIAPI(BaseModel):
             timeout: int = 500,
             temperature: Optional[float] = 1,
             max_tokens: Optional[int] = 1024,
-        ) -> str:
+        ) -> OpenAIResults:
 
         if 'data:image/jpeg;base64' in messages.image:
             image_np = b64_to_np(messages.image)
@@ -244,15 +254,17 @@ class OpenAIAPI(BaseModel):
             "temperature": temperature,
             "max_tokens": max_tokens,
         }
+
+        res = {}
         for _ in range(tries):
             try:
                 res = requests.post(self.completion_url, headers=self.headers, json=data, timeout=timeout).json()
                 if 'choices' in res:
                     message = res['choices'][0]['message']
-                    return message['content']
+                    return OpenAIResults(result=message['content'], result_json=res)
             except Exception as e:
                 print("ERROR:", e)
-        return False
+        return OpenAIResults(result=False, result_json=res)
 
     def embeddings(
             self,
@@ -260,48 +272,22 @@ class OpenAIAPI(BaseModel):
             model: EmbeddingModels = EmbeddingModels.ada2,
             tries: int = 5,
             timeout: int = 500,
-        ) -> list:
+        ) -> OpenAIResults:
         data = {
             "model": model,
             "input": prompt,
         }
+
+        res = {}
         for _ in range(tries):
             try:
                 res = requests.post(self.embeddings_url, headers=self.headers, json=data, timeout=timeout).json()
                 if 'data' in res:
-                    return [x['embedding'] for x in res['data']]
+                    return OpenAIResults(result=[x['embedding'] for x in res['data']], result_json=res)
             except Exception as e:
                 print("ERROR:", e)
-        return False
+        return OpenAIResults(result=False, result_json=res)
     
-    def cosine_similarity(
-            self, 
-            sim: Similarity,
-            data_list: List[str],
-            get_scores: bool = False
-        ) -> list:
-        vector = np.array(sim.vector)
-        matrix = np.array(sim.matrix)
-        scores = (np.sum(vector*matrix,axis=1) / ( np.sqrt(np.sum(matrix**2,axis=1)) * np.sqrt(np.sum(vector**2)) ) )
-        if get_scores:
-            return scores
-        result_list = self.get_similarity_result(scores, data_list)
-        return result_list
-    
-    def get_similarity_result(
-            self,
-            scores: list, 
-            all_data: list, 
-            topn: int = 5
-        ) -> list:
-        idx = (-scores).argsort()
-        result_list = []
-        for ix in idx[:topn]:
-            p = all_data[ix]
-            scr = scores[ix]
-            result_list.append(p)
-        return result_list
-
 class ScrapingBeeAPI(BaseModel):
     api_key: str
     scrape_url: HttpUrlString = "https://app.scrapingbee.com/api/v1"

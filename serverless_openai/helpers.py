@@ -64,6 +64,10 @@ class Similarity(BaseModel):
     vector: List[List[float]]
     matrix: List[List[float]]
 
+class OpenAIResults(BaseModel):
+    result: Union[str, bool, dict, list] = None
+    result_json: dict = None
+
 def save_npimage(
         filename: str, 
         img_np: np.array,
@@ -128,3 +132,29 @@ def crop_image(
         b64_img = encode_image(saved_image)
         img_b64_list.append(b64_img)
     return img_b64_list
+
+def cosine_similarity(
+        sim: Similarity,
+        data_list: List[str],
+        get_scores: bool = False
+    ) -> list:
+    vector = np.array(sim.vector)
+    matrix = np.array(sim.matrix)
+    scores = (np.sum(vector*matrix,axis=1) / ( np.sqrt(np.sum(matrix**2,axis=1)) * np.sqrt(np.sum(vector**2)) ) )
+    if get_scores:
+        return scores
+    result_list = get_similarity_result(scores, data_list)
+    return result_list
+
+def get_similarity_result(
+        scores: list, 
+        all_data: list, 
+        topn: int = 5
+    ) -> list:
+    idx = (-scores).argsort()
+    result_list = []
+    for ix in idx[:topn]:
+        p = all_data[ix]
+        scr = scores[ix]
+        result_list.append(p)
+    return result_list
