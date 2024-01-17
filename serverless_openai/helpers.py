@@ -2,7 +2,7 @@ from enum import Enum
 from pydantic import AfterValidator, BaseModel, HttpUrl, validator, TypeAdapter, ValidationError
 from typing import List, Optional, Union
 from typing_extensions import Annotated
-import base64, cv2, requests, json, uuid, os
+import base64, cv2, requests, uuid, os
 import numpy as np
 
 HttpUrlString = Annotated[HttpUrl, AfterValidator(lambda v: str(v))]

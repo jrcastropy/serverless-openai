@@ -2,7 +2,7 @@ from typing import Optional, List, Union
 from pydantic import BaseModel
 from serverless_openai.helpers import *
 from bs4 import BeautifulSoup
-import re
+import re, json
 
 class OpenAIAPI(BaseModel):
     api_key: str

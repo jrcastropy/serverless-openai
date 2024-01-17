@@ -15,19 +15,11 @@ setup(
     long_description=LONG_DESCRIPTION,
     packages=find_packages(),
     install_requires=[
-        "annotated-types==0.6.0",
-        "beautifulsoup4==4.12.2",
-        "certifi==2023.11.17",
-        "charset-normalizer==3.3.2",
-        "idna==3.6",
-        "numpy==1.24.4",
-        "opencv-python-headless==4.9.0.80",
-        "pydantic==2.5.3",
-        "pydantic-core==2.14.6",
-        "requests==2.31.0",
-        "soupsieve==2.5",
-        "typing-extensions==4.9.0",
-        "urllib3==2.1.0"
+        "pydantic==2.5.3"
+        "beautifulsoup4==4.12.2"
+        "opencv-python-headless==4.9.0.80"
+        "requests==2.28.2"
+        "typing-extensions==4.9.0"
     ],
     keywords=['serverless', 'openai', 'aws lambda', 'cloud functions', 'openai API'],
     classifiers=[
