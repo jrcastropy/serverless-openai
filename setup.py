@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-VERSION = '1.2.1'
+VERSION = '1.2.2'
 DESCRIPTION = "A package for using Openai in serverless environment"
 LONG_DESCRIPTION = 'A package for using Openai with scraping and etc. in serverless application such as AWS Lambda and GCP Cloud Function'
 
@@ -19,7 +19,8 @@ setup(
         "beautifulsoup4==4.12.2",
         "opencv-python-headless==4.9.0.80",
         "requests==2.28.2",
-        "typing-extensions==4.9.0"
+        "typing-extensions==4.9.0",
+        "tiktoken==0.5.2"
     ],
     keywords=['serverless', 'openai', 'aws lambda', 'cloud functions', 'openai API'],
     classifiers=[

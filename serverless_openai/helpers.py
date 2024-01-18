@@ -2,10 +2,12 @@ from enum import Enum
 from pydantic import AfterValidator, BaseModel, HttpUrl, validator, TypeAdapter, ValidationError
 from typing import List, Optional, Union
 from typing_extensions import Annotated
-import base64, cv2, requests, uuid, os
+import base64, cv2, requests, uuid, os, tiktoken
 import numpy as np
 
 HttpUrlString = Annotated[HttpUrl, AfterValidator(lambda v: str(v))]
+
+tokenizer = tiktoken.get_encoding("cl100k_base")
 
 class ExtendedEnum(Enum):
     @classmethod
@@ -158,3 +160,16 @@ def get_similarity_result(
         scr = scores[ix]
         result_list.append(p)
     return result_list
+
+def limit_tokens(
+        text: str,
+        chunk_size: int = 5000
+    ) -> str:
+    # Return an empty list if the text is empty or whitespace
+    if not text or text.isspace():
+        return False
+    # Tokenize the text
+    tokens = tokenizer.encode(text, disallowed_special=())
+    chunk = tokens[:chunk_size]
+    chunk_text = tokenizer.decode(chunk)
+    return chunk_text
