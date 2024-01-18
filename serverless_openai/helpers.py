@@ -117,6 +117,13 @@ def b64_to_np(
         saved_image = save_npimage(filename, image_np)
     return image_np
 
+def np_to_b64(
+        img_np: np.array
+    ) -> str:
+    _, buffer = cv2.imencode('.png', img_np)
+    base64_image = base64.b64encode(buffer).decode('utf-8')
+    return f"data:image/jpeg;base64,{base64_image}"
+
 def crop_image(
         img_np: np.array, 
         max_h: int = 4086,
@@ -130,8 +137,7 @@ def crop_image(
         max_h += max_h
         if not crop_img.shape[0]:
             break
-        saved_image = save_npimage(fn, crop_img)
-        b64_img = encode_image(saved_image)
+        b64_img = np_to_b64(crop_img)
         img_b64_list.append(b64_img)
     return img_b64_list
 

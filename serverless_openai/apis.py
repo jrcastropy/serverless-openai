@@ -236,7 +236,6 @@ class OpenAIAPI(BaseModel):
                 ]
             }
         ]
-        print(type(img_b64_list), len(img_b64_list))
         for b64 in img_b64_list:
             newm[0]['content'].append(
                 {
