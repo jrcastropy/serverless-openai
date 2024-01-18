@@ -161,6 +161,13 @@ def get_similarity_result(
         result_list.append(p)
     return result_list
 
+def get_token_count(
+        text: str
+    ) -> int:
+    """Returns the number of tokens in a text string."""
+    num_tokens = len(tokenizer.encode(text))
+    return num_tokens
+
 def limit_tokens(
         text: str,
         chunk_size: int = 5000
