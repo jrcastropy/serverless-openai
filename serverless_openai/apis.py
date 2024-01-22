@@ -162,7 +162,8 @@ class OpenAIAPI(BaseModel):
         results = {}
         for _ in range(tries):
             results = requests.post(self.imagecreation_url, headers=self.headers, json=data, timeout=timeout).json()
-            return OpenAIResults(result=results['url'], result_json=results)
+            print(results)
+            return OpenAIResults(result=results['data'][0]['url'], result_json=results)
         return OpenAIResults(result=False, result_json=results)
     
     def vision(
