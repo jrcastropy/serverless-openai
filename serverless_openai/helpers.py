@@ -45,16 +45,20 @@ class VisionModels(str, ExtendedEnum):
 
 class VisionMessage(BaseModel):
     text: str
+    image: Union[str, np.ndarray]
     role: Roles = Roles.user
-    image: str
-
+    
     @validator('image', always=True)
     def check_url(cls, v, values):
-        try:
-            TypeAdapter(HttpUrl).validate_python(v)
-            return v
-        except ValidationError:
-            return encode_image(v)
+        if isinstance(v, str):
+            try:
+                TypeAdapter(HttpUrl).validate_python(v)
+                return v
+            except ValidationError:
+                return encode_image(v)
+        return v
+    class Config:
+        arbitrary_types_allowed = True
 
 class EmbeddingModels(str, ExtendedEnum):
     ada2 : str = "text-embedding-ada-002"

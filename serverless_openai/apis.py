@@ -221,10 +221,13 @@ class OpenAIAPI(BaseModel):
             max_tokens: Optional[int] = 1024,
         ) -> OpenAIResults:
 
-        if 'data:image/jpeg;base64' in messages.image:
-            image_np = b64_to_np(messages.image)
-        else:
-            image_np = urlimage_to_np(messages.image)
+        if isinstance(messages.image, str):
+            if 'data:image/jpeg;base64' in messages.image:
+                image_np = b64_to_np(messages.image)
+            else:
+                image_np = urlimage_to_np(messages.image)
+        elif isinstance(messages.image, np.ndarray):
+            image_np = messages.image
         img_b64_list = crop_image(image_np)
         newm = [
             {
