@@ -341,3 +341,22 @@ class ScrapingBeeAPI(BaseModel):
             all_links = [x for x in all_links if x is not None]
             result['links'] = all_links
         return result
+    
+    def screenshot_website(
+            self,
+            url: str,
+            screenshot_full_page: bool = True,
+        ) ->  dict:
+        params = {
+            "api_key": self.api_key,
+            "url": url,
+            "screenshot": "True",
+            "screenshot_full_page": screenshot_full_page,
+            'wait_browser': 'load',
+        }
+        res = requests.get(self.scrape_url, params=params)
+        if res.ok:
+            arr = np.asarray(bytearray(res.content), dtype=np.uint8)
+            img_np = cv2.imdecode(arr, -1) # 'Load it as it is'
+            return {'image': img_np, 'status': True}
+        return {'image': False, 'status': False}
