@@ -147,7 +147,9 @@ class OpenAIAPI(BaseModel):
             prompt: str,
             model: Union[ImageCreationModels, str] = ImageCreationModels.dalle_3,
             n: int = 1,
-            size: str = "1024x1024",
+            response_format: str = 'url', # or b64_json
+            style: str = 'natural', # or vivid
+            size: str = "1024x1024", # 1792x1024 or 1024x1792
             timeout: int = 500,
             tries: int = 5
         ) -> OpenAIResults:
@@ -157,12 +159,15 @@ class OpenAIAPI(BaseModel):
             "prompt": prompt,
             "n": n,
             "size": size,
+            "response_format": response_format,
+            "style": style
         }
 
         results = {}
         for _ in range(tries):
             results = requests.post(self.imagecreation_url, headers=self.headers, json=data, timeout=timeout).json()
-            print(results)
+            if response_format == 'b64_json':
+                return OpenAIResults(result=results['data'][0]['b64_json'], result_json=results)
             return OpenAIResults(result=results['data'][0]['url'], result_json=results)
         return OpenAIResults(result=False, result_json=results)
     
