@@ -3,6 +3,8 @@ from pydantic import BaseModel
 from serverless_openai.helpers import *
 from bs4 import BeautifulSoup
 import re, json
+import http.client
+http.client._MAXHEADERS = 1000
 
 class OpenAIAPI(BaseModel):
     api_key: str
