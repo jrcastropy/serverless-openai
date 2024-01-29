@@ -25,6 +25,9 @@ class Roles(str, ExtendedEnum):
 class TextCompletionModels(str, ExtendedEnum):
     gpt4_1106 : str = "gpt-4-1106-preview"
     gpt4 : str = "gpt-4"
+    gpt4_turbo : str = "gpt-4-turbo-preview"
+    gpt4_0125 : str = "gpt-4-0125-preview"
+    gpt35_turbo_0125: str = "gpt-3.5-turbo-0125"
     gpt35_turbo_1106 : str = "gpt-3.5-turbo-1106"
     gpt35_turbo_16k : str = "gpt-3.5-turbo-16k"
     gpt35_turbo : str = "gpt-3.5-turbo"
@@ -65,6 +68,10 @@ class EmbeddingModels(str, ExtendedEnum):
 
 class EmbeddingPrompts(BaseModel):
     prompt: Union[str, List[str]]
+
+class ModerationModels(str, ExtendedEnum):
+    moderation_stable : str = "text-moderation-stable"
+    moderation_latest : str = "text-moderation-latest"
 
 class Similarity(BaseModel):
     vector: List[List[float]]

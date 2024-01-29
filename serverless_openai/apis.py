@@ -15,6 +15,7 @@ class OpenAIAPI(BaseModel):
     completion_url: HttpUrlString = "https://api.openai.com/v1/chat/completions"
     imagecreation_url: HttpUrlString = "https://api.openai.com/v1/images/generations"
     embeddings_url: HttpUrlString = "https://api.openai.com/v1/embeddings"
+    moderation_url: HttpUrlString = "https://api.openai.com/v1/moderations"
     
 
     @validator('headers', always=True)
@@ -280,12 +281,14 @@ class OpenAIAPI(BaseModel):
             self,
             prompt: EmbeddingPrompts,
             model: EmbeddingModels = EmbeddingModels.ada2,
+            dimensions: int = 1536,
             tries: int = 5,
             timeout: int = 500,
         ) -> OpenAIResults:
         data = {
             "model": model,
             "input": prompt,
+            "dimensions": dimensions
         }
 
         res = {}
@@ -294,6 +297,27 @@ class OpenAIAPI(BaseModel):
                 res = requests.post(self.embeddings_url, headers=self.headers, json=data, timeout=timeout).json()
                 if 'data' in res:
                     return OpenAIResults(result=[x['embedding'] for x in res['data']], result_json=res)
+            except Exception as e:
+                print("ERROR:", e)
+        return OpenAIResults(result=False, result_json=res)
+    
+    def moderation(
+            self,
+            prompt: str,
+            model: ModerationModels = ModerationModels.moderation_latest,
+            tries: int = 5,
+            timeout: int = 500,
+    ) -> OpenAIResults:
+        data = {
+            "model": model,
+            "input": prompt,
+        }
+        res = {}
+        for _ in range(tries):
+            try:
+                res = requests.post(self.moderation_url, headers=self.headers, json=data, timeout=timeout).json()
+                if 'results' in res:
+                    return OpenAIResults(result=res['results'][0]['flagged'], result_json=res)
             except Exception as e:
                 print("ERROR:", e)
         return OpenAIResults(result=False, result_json=res)
