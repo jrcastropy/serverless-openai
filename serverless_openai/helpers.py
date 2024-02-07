@@ -197,3 +197,59 @@ def limit_tokens(
     chunk = tokens[:chunk_size]
     chunk_text = tokenizer.decode(chunk)
     return chunk_text
+
+def checkoutput_init(
+        result: dict, 
+        tools: dict,
+        apply_min_item: bool = False
+    ) ->  bool:
+    params = tools[0]['function']['parameters']
+    return checkoutput(result, params, apply_min_item=apply_min_item)
+
+def checkoutput(
+        res: dict, 
+        params: dict,
+        apply_min_item: bool = False
+    ) -> bool:
+    jtype = params['type']
+    # print("RES:", res)
+    # print("TYPE:", jtype)
+    if jtype == 'object':
+        required = params['required']
+        properties = params['properties']
+        for req in required:
+            # print("REQUIRED:", req)
+            if req not in res:
+                print(f"Requirement {req} is not fulfilled")
+                return False
+            p = properties[req]
+            r = res[req]
+            ret_val = checkoutput(r, p, apply_min_item=apply_min_item)
+            if not ret_val:
+                return ret_val
+    elif jtype == 'array':
+        items = params['items']
+        if apply_min_item:
+            minItems = 1
+            if 'minItems' in params:
+                minItems = params['minItems']
+            if len(res) < minItems:
+                print(f"Minimum items of {minItems} not acquired only {len(res)} were filled")
+                return False
+        if not len(res):
+            print(f"This array is empty: {res}")
+            return False
+        for r in res:
+            ret_val = checkoutput(r, items, apply_min_item=apply_min_item)
+            if not ret_val:
+                return ret_val
+    else:
+        if res:
+            if isinstance(res, str):
+                if res.strip() == "":
+                    print(f"result was an empty string")
+                    return False
+        else:
+            print(f"Failed in running the results")
+            return False
+    return True

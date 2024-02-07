@@ -37,7 +37,7 @@ class OpenAIAPI(BaseModel):
     def chat_completion(
             self, 
             messages: Messages,
-            model: Union[TextCompletionModels, str] = TextCompletionModels.gpt4_1106,
+            model: Union[TextCompletionModels, str] = TextCompletionModels.gpt4_0125,
             tries: int = 5,
             timeout: int = 500,
             temperature: Optional[float] = 1,
@@ -91,7 +91,7 @@ class OpenAIAPI(BaseModel):
             messages: Messages,
             tools: List[dict],
             tool_choice: str,
-            model: Union[TextCompletionModels, str] = TextCompletionModels.gpt4_1106,
+            model: Union[TextCompletionModels, str] = TextCompletionModels.gpt4_0125,
             tries: int = 5,
             timeout: int = 500,
             temperature: Optional[float] = 1,
@@ -107,7 +107,9 @@ class OpenAIAPI(BaseModel):
             seed: Optional[int] = None,
             stop: Optional[list] = None,
             stream: Optional[bool] = False,
-            top_p: Optional[int] = 1,  
+            top_p: Optional[int] = 1,
+            apply_min_item: bool = False,
+            check_output: bool = True,
         ) -> OpenAIResults:
         messages = messages.model_dump()['messages']
 
@@ -138,7 +140,13 @@ class OpenAIAPI(BaseModel):
                 if 'choices' in results:
                     res = results['choices'][0]['message']
                     res_json = json.loads(res['tool_calls'][0]['function']['arguments'], strict=False)
-                    return OpenAIResults(result=res_json, result_json=results)
+                    if check_output:
+                        if checkoutput_init(res_json, tools, apply_min_item=apply_min_item):
+                            return OpenAIResults(result=res_json, result_json=results)
+                        else:
+                            continue
+                    else:
+                        return OpenAIResults(result=res_json, result_json=results)
                 else:
                     print("RESULTS:", results)
             except Exception as e:
