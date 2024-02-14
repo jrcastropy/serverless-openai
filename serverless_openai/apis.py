@@ -161,6 +161,7 @@ class OpenAIAPI(BaseModel):
             response_format: str = 'url', # or b64_json
             style: str = 'natural', # or vivid
             size: str = "1024x1024", # 1792x1024 or 1024x1792
+            quality: str = "standard",
             timeout: int = 500,
             tries: int = 5
         ) -> OpenAIResults:
@@ -171,7 +172,8 @@ class OpenAIAPI(BaseModel):
             "n": n,
             "size": size,
             "response_format": response_format,
-            "style": style
+            "style": style,
+            'quality': quality
         }
 
         results = {}
