@@ -290,16 +290,22 @@ class OpenAIAPI(BaseModel):
     def embeddings(
             self,
             prompt: EmbeddingPrompts,
-            model: EmbeddingModels = EmbeddingModels.ada2,
+            model: EmbeddingModels = EmbeddingModels.te_ada2,
             dimensions: int = 1536,
             tries: int = 5,
             timeout: int = 500,
         ) -> OpenAIResults:
-        data = {
-            "model": model,
-            "input": prompt,
-            "dimensions": dimensions
-        }
+        if model == "text-embedding-ada-002":
+            data = {
+                "model": model,
+                "input": prompt,
+            }
+        else:
+            data = {
+                "model": model,
+                "input": prompt,
+                "dimensions": dimensions
+            }
 
         res = {}
         for _ in range(tries):

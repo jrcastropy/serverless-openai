@@ -64,7 +64,9 @@ class VisionMessage(BaseModel):
         arbitrary_types_allowed = True
 
 class EmbeddingModels(str, ExtendedEnum):
-    ada2 : str = "text-embedding-ada-002"
+    te_ada2 : str = "text-embedding-ada-002"
+    te3_small: str = "text-embedding-3-small"
+    te3_large: str = "text-embedding-3-large"
 
 class EmbeddingPrompts(BaseModel):
     prompt: Union[str, List[str]]
@@ -154,29 +156,31 @@ def crop_image(
 
 def cosine_similarity(
         sim: Similarity,
-        data_list: List[str],
-        get_scores: bool = False
-    ) -> list:
+        data_list: List[str]
+    ) -> dict:
     vector = np.array(sim.vector)
     matrix = np.array(sim.matrix)
     scores = (np.sum(vector*matrix,axis=1) / ( np.sqrt(np.sum(matrix**2,axis=1)) * np.sqrt(np.sum(vector**2)) ) )
-    if get_scores:
-        return scores
-    result_list = get_similarity_result(scores, data_list)
-    return result_list
+    res_dict = get_similarity_result(scores, data_list)
+    return res_dict
 
 def get_similarity_result(
         scores: list, 
         all_data: list, 
         topn: int = 5
-    ) -> list:
+    ) -> dict:
     idx = (-scores).argsort()
     result_list = []
+    scores_llist = []
     for ix in idx[:topn]:
         p = all_data[ix]
-        scr = scores[ix]
+        score = scores[ix]
+        scores_llist.append(score)
         result_list.append(p)
-    return result_list
+    return {
+        "result_list": result_list,
+        "scores_llist": scores_llist
+    }
 
 def get_token_count(
         text: str
