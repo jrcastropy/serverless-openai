@@ -156,12 +156,13 @@ def crop_image(
 
 def cosine_similarity(
         sim: Similarity,
-        data_list: List[str]
+        data_list: List[str],
+        topn: int = 5
     ) -> dict:
     vector = np.array(sim.vector)
     matrix = np.array(sim.matrix)
     scores = (np.sum(vector*matrix,axis=1) / ( np.sqrt(np.sum(matrix**2,axis=1)) * np.sqrt(np.sum(vector**2)) ) )
-    res_dict = get_similarity_result(scores, data_list)
+    res_dict = get_similarity_result(scores, data_list, topn=topn)
     return res_dict
 
 def get_similarity_result(
