@@ -63,7 +63,7 @@ class VisionMessage(BaseModel):
             vlist = []
             for vi in v:
                 try:
-                    TypeAdapter(HttpUrl).validate_python(v)
+                    TypeAdapter(HttpUrl).validate_python(vi)
                     vlist.append(vi)
                 except ValidationError:
                     vlist.append(encode_image(vi))
