@@ -68,6 +68,7 @@ class VisionMessage(BaseModel):
                 except ValidationError:
                     vlist.append(encode_image(vi))
             return vlist
+
     class Config:
         arbitrary_types_allowed = True
 
