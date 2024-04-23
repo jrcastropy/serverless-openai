@@ -48,7 +48,7 @@ class VisionModels(str, ExtendedEnum):
 
 class VisionMessage(BaseModel):
     text: str
-    image: Union[str, np.ndarray]
+    image: Union[str, np.ndarray, List[str]]
     role: Roles = Roles.user
     
     @validator('image', always=True)
@@ -68,7 +68,7 @@ class VisionMessage(BaseModel):
                 except ValidationError:
                     vlist.append(encode_image(vi))
             return vlist
-
+        return v
     class Config:
         arbitrary_types_allowed = True
 
