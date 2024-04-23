@@ -238,15 +238,26 @@ class OpenAIAPI(BaseModel):
             temperature: Optional[float] = 1,
             max_tokens: Optional[int] = 1024,
         ) -> OpenAIResults:
+        
+        if isinstance(messages.image, list):
+            img_b64_list = []
+            for img in messages.image:
+                if 'data:image/jpeg;base64' in img:
+                    image_np = b64_to_np(img)
+                else:
+                    image_np = urlimage_to_np(img)
+                img_b64_list.extend(crop_image(image_np))
 
-        if isinstance(messages.image, str):
+        elif isinstance(messages.image, str):
             if 'data:image/jpeg;base64' in messages.image:
                 image_np = b64_to_np(messages.image)
             else:
                 image_np = urlimage_to_np(messages.image)
+            img_b64_list = crop_image(image_np)
         elif isinstance(messages.image, np.ndarray):
             image_np = messages.image
-        img_b64_list = crop_image(image_np)
+            img_b64_list = crop_image(image_np)
+            
         newm = [
             {
                 "role": messages.role,
