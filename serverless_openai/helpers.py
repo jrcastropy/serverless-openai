@@ -59,7 +59,15 @@ class VisionMessage(BaseModel):
                 return v
             except ValidationError:
                 return encode_image(v)
-        return v
+        elif isinstance(v, list):
+            vlist = []
+            for vi in v:
+                try:
+                    TypeAdapter(HttpUrl).validate_python(v)
+                    vlist.append(vi)
+                except ValidationError:
+                    vlist.append(encode_image(vi))
+            return vlist
     class Config:
         arbitrary_types_allowed = True
 
