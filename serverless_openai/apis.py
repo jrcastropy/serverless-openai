@@ -37,7 +37,7 @@ class OpenAIAPI(BaseModel):
     def chat_completion(
             self, 
             messages: Messages,
-            model: Union[TextCompletionModels, str] = TextCompletionModels.gpt4_0125,
+            model: Union[TextCompletionModels, str] = TextCompletionModels.gpt4_turbo,
             tries: int = 5,
             timeout: int = 500,
             temperature: Optional[float] = 1,
@@ -187,7 +187,7 @@ class OpenAIAPI(BaseModel):
     def vision(
             self,
             messages: VisionMessage,
-            model: Union[VisionModels, str] = VisionModels.gpt4_vision,
+            model: Union[VisionModels, str] = VisionModels.gpt4_turbo,
             tries: int = 5,
             timeout: int = 500,
             temperature: Optional[float] = 1,
@@ -232,11 +232,11 @@ class OpenAIAPI(BaseModel):
     def vision_longimage(
             self,
             messages: VisionMessage,
-            model: Union[VisionModels, str] = VisionModels.gpt4_vision,
+            model: Union[VisionModels, str] = VisionModels.gpt4_turbo,
             tries: int = 5,
             timeout: int = 500,
             temperature: Optional[float] = 1,
-            max_tokens: Optional[int] = 1024,
+            max_tokens: Optional[int] = 1024
         ) -> OpenAIResults:
         
         if isinstance(messages.image, list):
@@ -297,6 +297,93 @@ class OpenAIAPI(BaseModel):
             except Exception as e:
                 print("ERROR:", e)
         return OpenAIResults(result=False, result_json=res)
+    
+    def vision_tools(
+            self,
+            messages: VisionMessage,
+            model: Union[VisionModels, str] = VisionModels.gpt4_turbo,
+            tries: int = 5,
+            timeout: int = 500,
+            temperature: Optional[float] = 1,
+            max_tokens: Optional[int] = 1024,
+            tools: Optional[List[dict]] = None,
+            tool_choice: Optional[str] = None,
+            response_format: Optional[dict] = {"type": "json_object"},
+        ) -> OpenAIResults:
+
+        if isinstance(messages.image, list):
+            img_b64_list = []
+            for img in messages.image:
+                try:
+                    TypeAdapter(HttpUrl).validate_python(img)
+                    img_b64_list.append(img)
+                except:
+                    if 'data:image/jpeg;base64' in img:
+                        image_np = b64_to_np(img)
+                    else:
+                        image_np = urlimage_to_np(img)
+                    img_b64_list.extend(crop_image(image_np))
+
+        elif isinstance(messages.image, str):
+            if 'data:image/jpeg;base64' in messages.image:
+                image_np = b64_to_np(messages.image)
+            else:
+                image_np = urlimage_to_np(messages.image)
+            img_b64_list = crop_image(image_np)
+
+        elif isinstance(messages.image, np.ndarray):
+            image_np = messages.image
+            img_b64_list = crop_image(image_np)
+            
+        newm = [
+            {
+                "role": messages.role,
+                "content": [
+                    {
+                        "type": "text",
+                        "text": messages.text
+                    },
+                ]
+            }
+        ]
+        for b64 in img_b64_list:
+            newm[0]['content'].append(
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": b64,
+                        "detail": "high"
+                    }
+                }
+            )
+
+        data = {
+            "model": model,
+            "messages": newm,
+            "temperature": temperature,
+        }
+
+        if max_tokens:
+            data['max_tokens'] = max_tokens
+
+        if tool_choice:
+            data["response_format"] = response_format
+            data["tools"] = tools
+            data["tool_choice"] = {"type": "function", "function": {"name": tool_choice}}
+
+        results = {}
+        for _ in range(tries):
+            try:
+                results = requests.post(self.completion_url, headers=self.headers, json=data, timeout=timeout).json()
+                if 'choices' in results:
+                    res = results['choices'][0]['message']
+                    res_json = json.loads(res['tool_calls'][0]['function']['arguments'], strict=False)
+                    return OpenAIResults(result=res_json, result_json=results)
+                else:
+                    print("RESULTS:", results)
+            except Exception as e:
+                print("ERROR:", e)
+        return OpenAIResults(result=False, result_json=results)
 
     def embeddings(
             self,

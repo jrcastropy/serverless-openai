@@ -25,7 +25,8 @@ class Roles(str, ExtendedEnum):
 class TextCompletionModels(str, ExtendedEnum):
     gpt4_1106 : str = "gpt-4-1106-preview"
     gpt4 : str = "gpt-4"
-    gpt4_turbo : str = "gpt-4-turbo-preview"
+    gpt4_turbo : str = "gpt-4-turbo"
+    gpt4_turbo_prev : str = "gpt-4-turbo-preview"
     gpt4_0125 : str = "gpt-4-0125-preview"
     gpt35_turbo_0125: str = "gpt-3.5-turbo-0125"
     gpt35_turbo_1106 : str = "gpt-3.5-turbo-1106"
@@ -45,6 +46,7 @@ class ImageCreationModels(str, ExtendedEnum):
 
 class VisionModels(str, ExtendedEnum):
     gpt4_vision : str = "gpt-4-vision-preview"
+    gpt4_turbo : str = "gpt-4-turbo"
 
 class VisionMessage(BaseModel):
     text: str
